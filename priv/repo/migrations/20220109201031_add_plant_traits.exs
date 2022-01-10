@@ -3,19 +3,18 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
 
   def up do
     create table(:plant_traits, primary_key: true)
-      add :first_name, :string
       add :LastName, :string
       add :FirstName, :string
-      add :DatasetID, :string
+      add :DatasetID, :integer
       add :Dataset, :string
       add :SpeciesName, :string
-      add :AccSpeciesID, :string
+      add :AccSpeciesID, :integer
       add :AccSpeciesName, :string
-      add :ObservationID, :string
-      add :ObsDataID, :string
-      add :TraitID, :string
+      add :ObservationID, :integer
+      add :ObsDataID, :integer
+      add :TraitID, :integer
       add :TraitName, :string
-      add :DataID, :string
+      add :DataID, :integer
       add :DataName, :string
       add :OriglName, :string
       add :OrigValueStr, :string
@@ -23,14 +22,15 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
       add :ValueKindName, :string
       add :OrigUncertaintyStr, :string
       add :UncertaintyName, :string
-      add :Replicates, :string
-      add :StdValue, :string
+      add :Replicates, :integer
+      add :StdValue, :float
       add :UnitName, :string
-      add :RelUncertaintyPercent, :string
-      add :OrigObsDataID, :string
-      add :ErrorRisk, :string
+      add :RelUncertaintyPercent, :float
+      add :OrigObsDataID, :number
+      add :ErrorRisk, :float
       add :Reference, :string
       add :Comment, :string
+      add :no_name_column, :string
       timestamps()
     end
   end
