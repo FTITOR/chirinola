@@ -30,7 +30,7 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
       add :ErrorRisk, :float
       add :Reference, :string
       add :Comment, :string
-      add :no_name_column, :string
+      add :NoNameColumn, :string
       timestamps()
     end
   end
