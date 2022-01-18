@@ -2,7 +2,7 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
   use Ecto.Migration
 
   def up do
-    create table(:plant_traits, primary_key: true)
+    create table(:plant_traits, primary_key: true) do
       add :LastName, :string
       add :FirstName, :string
       add :DatasetID, :integer
@@ -26,16 +26,16 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
       add :StdValue, :float
       add :UnitName, :string
       add :RelUncertaintyPercent, :float
-      add :OrigObsDataID, :number
+      add :OrigObsDataID, :integer
       add :ErrorRisk, :float
-      add :Reference, :string
-      add :Comment, :string
+      add :Reference, :text
+      add :Comment, :text
       add :NoNameColumn, :string
       timestamps()
     end
   end
 
   def down do
-    drop(table(:plant_traits))
+    drop table(:plant_traits)
   end
 end
