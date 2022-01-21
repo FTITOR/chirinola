@@ -7,3 +7,5 @@ config :chirinola, Chirinola.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost"
+
+config :logger, level: :info
