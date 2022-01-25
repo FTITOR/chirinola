@@ -22,7 +22,7 @@ defmodule Chirinola.Repo.Migrations.AddPlantTraits do
       add :ValueKindName, :string
       add :OrigUncertaintyStr, :string
       add :UncertaintyName, :string
-      add :Replicates, :integer
+      add :Replicates, :float
       add :StdValue, :float
       add :UnitName, :string
       add :RelUncertaintyPercent, :float

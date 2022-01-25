@@ -1,4 +1,8 @@
 defmodule Chirinola.Schema.PlantTraits do
+  @moduledoc """
+  Documentation for `Migrator`
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -24,7 +28,7 @@ defmodule Chirinola.Schema.PlantTraits do
     field(:ValueKindName, :string)
     field(:OrigUncertaintyStr, :string)
     field(:UncertaintyName, :string)
-    field(:Replicates, :integer)
+    field(:Replicates, :float)
     field(:StdValue, :float)
     field(:UnitName, :string)
     field(:RelUncertaintyPercent, :float)
