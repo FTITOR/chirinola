@@ -1,6 +1,6 @@
 defmodule Chirinola.Migrator do
   @moduledoc """
-  Documentation for `Chirinola`
+  Documentation for `Migrator`
   """
   require Logger
   alias Chirinola.Repo
@@ -36,8 +36,21 @@ defmodule Chirinola.Migrator do
   @file_not_found_message "File not found, enter the absolute path of the file to migrate"
   @headers_row "LastName\tFirstName\tDatasetID\tDataset\tSpeciesName\tAccSpeciesID\tAccSpeciesName\tObservationID\tObsDataID\tTraitID\tTraitName\tDataID\tDataName\tOriglName\tOrigValueStr\tOrigUnitStr\tValueKindName\tOrigUncertaintyStr\tUncertaintyName\tReplicates\tStdValue\tUnitName\tRelUncertaintyPercent\tOrigObsDataID\tErrorRisk\tReference\tComment\t\n"
 
-  def count() do
-    "/Users/ftitor/Downloads/17728_27112021022449/17728.txt"
+  @doc """
+  Provide the absolute path of the file as a string,
+  the function `count/1` will return the number of lines that the file contains.
+
+
+  ## Examples
+
+      iex> Chirinola.Migrator.count("some_file.txt")
+      1000
+
+  """
+
+  @spec count(String.t()) :: integer()
+  def count(path \\ "/Users/ftitor/Downloads/17728_27112021022449/17728.txt") do
+    path
     |> File.read!()
     |> String.split("\n")
     |> length()
