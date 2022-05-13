@@ -3,8 +3,7 @@ defmodule Chirinola.Migrator do
   Documentation for `Migrator` module.
   """
   require Logger
-  alias Chirinola.Repo
-  alias Chirinola.Schema.PlantTraits, as: PlantTraitsSchema
+  alias Chirinola.PlantTrait
 
   @typedoc """
   Encoding modes, a tuple of two atoms.
@@ -192,24 +191,7 @@ defmodule Chirinola.Migrator do
 
   defp insert_plant(plant) when map_size(plant) == 0, do: Logger.info("- Empty row")
 
-  defp insert_plant(plant) do
-    %PlantTraitsSchema{}
-    |> PlantTraitsSchema.changeset(plant)
-    |> Repo.insert()
-    |> case do
-      {:ok, plant_trait} ->
-        {:ok, plant_trait}
-
-      {:error, %Ecto.Changeset{changes: changes, errors: error}} ->
-        Logger.error("## PARAMS")
-        Logger.info(plant)
-        Logger.error("## INFORMATION TO INSERT:")
-        Logger.info(changes)
-        Logger.error("## ERROR DETAIL:")
-        Logger.info(error)
-        File.write("errors.text", changes)
-    end
-  end
+  defp insert_plant(plant), do: PlantTrait.insert(plant)
 
   defp validate_replicate(nil), do: nil
   defp validate_replicate(""), do: nil

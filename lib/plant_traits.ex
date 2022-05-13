@@ -36,10 +36,7 @@ defmodule Chirinola.PlantTrait do
   """
   @spec insert_all(list()) :: {number(), list()} | nil
   def insert_all(plant_traits_attrs) do
-    IO.inspect(length(plant_traits_attrs))
-
     PlantTraitsSchema
     |> Repo.insert_all(plant_traits_attrs)
-    |> IO.inspect()
   end
 end
