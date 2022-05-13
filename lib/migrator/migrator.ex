@@ -1,10 +1,10 @@
 defmodule Chirinola.Migrator do
   @moduledoc """
-  Documentation for `Migrator`
+  Documentation for `Migrator` module.
   """
   require Logger
   alias Chirinola.Repo
-  alias Chirinola.Schema.PlantTraits
+  alias Chirinola.Schema.PlantTraits, as: PlantTraitsSchema
 
   @typedoc """
   Encoding modes, a tuple of two atoms.
@@ -41,6 +41,7 @@ defmodule Chirinola.Migrator do
 
   @wrong_path_message "Wrong path! Enter the absolute path of the file to migrate"
   @invalid_encoding_mode "The decoding format is invalid, check the valid formats"
+
   @file_not_found_message "File not found, enter the absolute path of the file to migrate"
   @headers_line "LastName\tFirstName\tDatasetID\tDataset\tSpeciesName\tAccSpeciesID\tAccSpeciesName\tObservationID\tObsDataID\tTraitID\tTraitName\tDataID\tDataName\tOriglName\tOrigValueStr\tOrigUnitStr\tValueKindName\tOrigUncertaintyStr\tUncertaintyName\tReplicates\tStdValue\tUnitName\tRelUncertaintyPercent\tOrigObsDataID\tErrorRisk\tReference\tComment\t\n"
 
@@ -119,6 +120,7 @@ defmodule Chirinola.Migrator do
 
   def start(path, encoding_mode) do
     Logger.info("** MIGRATION PROCESS STARTED!")
+    # path = "/home/mono/Documentos/try/17728_27112021022449/17728.txt"
     # path = "/Users/ftitor/Downloads/17728_27112021022449/17728.txt"
     # path = "/Users/ftitor/Downloads/17728_27112021022449/test.txt"
 
@@ -177,7 +179,7 @@ defmodule Chirinola.Migrator do
     |> Map.put("value_kind_name", Enum.at(plant, 16))
     |> Map.put("orig_uncertainty_str", Enum.at(plant, 17))
     |> Map.put("uncertainty_name", Enum.at(plant, 18))
-    |> Map.put("replicates", Enum.at(plant, 19))
+    |> Map.put("replicates", validate_replicate(Enum.at(plant, 19)))
     |> Map.put("std_value", Enum.at(plant, 20))
     |> Map.put("unit_name", Enum.at(plant, 21))
     |> Map.put("rel_uncertainty_percent", Enum.at(plant, 22))
@@ -191,8 +193,8 @@ defmodule Chirinola.Migrator do
   defp insert_plant(plant) when map_size(plant) == 0, do: Logger.info("- Empty row")
 
   defp insert_plant(plant) do
-    %PlantTraits{}
-    |> PlantTraits.changeset(plant)
+    %PlantTraitsSchema{}
+    |> PlantTraitsSchema.changeset(plant)
     |> Repo.insert()
     |> case do
       {:ok, plant_trait} ->
@@ -208,4 +210,23 @@ defmodule Chirinola.Migrator do
         File.write("errors.text", changes)
     end
   end
+
+  defp validate_replicate(nil), do: nil
+  defp validate_replicate(""), do: nil
+  defp validate_replicate(replicate) when is_float(replicate), do: replicate
+
+  defp validate_replicate(replicate) when is_binary(replicate) do
+    replicate
+    |> Float.parse()
+    |> case do
+      {float, _} ->
+        float
+
+      :error ->
+        Logger.error("Replicate invalid: #{replicate}")
+        nil
+    end
+  end
+
+  defp validate_replicate(_), do: nil
 end
