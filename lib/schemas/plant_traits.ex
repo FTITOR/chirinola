@@ -1,6 +1,6 @@
 defmodule Chirinola.Schema.PlantTraits do
   @moduledoc """
-  Documentation for `Migrator`
+  Documentation for `PlantTraits` schema
   """
 
   use Ecto.Schema
