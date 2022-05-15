@@ -7,15 +7,11 @@ defmodule Chirinola.Worker do
 
   alias Chirinola.PlantTrait
 
-  # Client
-
   def start_link(), do: GenServer.start_link(__MODULE__, [])
 
   def insert(pid, element), do: GenServer.cast(pid, {:insert, element})
 
-  def insert_all(pid, element), do: GenServer.cast(pid, {:insert, element})
-
-  # Server (callbacks)
+  def insert_all(pid, element), do: GenServer.cast(pid, {:insert_all, element})
 
   @impl true
   def init(stack), do: {:ok, stack}
@@ -28,9 +24,13 @@ defmodule Chirinola.Worker do
   end
 
   @impl true
-  def handle_cast({:insert_all, elements}, state) do
-    PlantTrait.insert_all(elements)
+  def handle_cast({:insert_all, element}, state) when length(state) < 200 do
+    {:noreply, state ++ [element]}
+  end
 
-    {:noreply, state}
+  def handle_cast({:insert_all, element}, state) when length(state) == 200 do
+    PlantTrait.insert_all(state ++ [element])
+
+    {:noreply, []}
   end
 end
