@@ -20,13 +20,11 @@ defmodule Chirinola.PlantTrait do
         {:ok, plant_trait}
 
       {:error, %Ecto.Changeset{changes: changes, errors: error}} ->
-        Logger.error("## PARAMS")
-        Logger.info(plant_traits_attrs)
-        Logger.error("## INFORMATION TO INSERT:")
-        Logger.info(changes)
-        Logger.error("## ERROR DETAIL:")
-        Logger.info(error)
-        File.write("errors.text", changes)
+        Logger.error("ERROR WHILE INSERTING THE FOLLOWING RECORD:")
+        Logger.info("#PARAMS: #{inspect(plant_traits_attrs)}")
+        Logger.info("#CHANGES: #{inspect(changes)}")
+        Logger.info("#ERROR DETAIL: #{inspect(error)}")
+        File.write("errors-#{NaiveDateTime.utc_now()}.txt", changes)
         error
     end
   end
