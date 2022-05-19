@@ -7,6 +7,15 @@ Erlang ~> 22.3.4.21
 PostgreSQL ~> 14.1
 ```
 
+## Setup database
+```cmd
+iex -S mix
+```
+```cmd
+iex(1)> mix ecto.create
+iex(2)> mix ecto.migrate
+```
+
 ## Up and running
 ```cmd
 iex -S mix
