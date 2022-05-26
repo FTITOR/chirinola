@@ -100,7 +100,7 @@ defmodule Chirinola.MigratorFast do
 
         path
         |> File.stream!([encoding_mode], :line)
-        |> Stream.map(&migrate_line(&1, queue_pid))
+        |> Stream.map(&migrate_line(&1, queue_pid, Path.basename(path)))
         |> Stream.run()
 
         Logger.info("** MIGRATION FINISHED!")
@@ -121,23 +121,23 @@ defmodule Chirinola.MigratorFast do
     end)
   end
 
-  defp migrate_line(line, _) when line == @headers_line,
+  defp migrate_line(line, _, _) when line == @headers_line,
     do: Logger.info("HEADERS REMOVED!")
 
-  defp migrate_line("\n", _), do: Logger.info("EMPTY LINE")
+  defp migrate_line("\n", _, _), do: Logger.info("EMPTY LINE")
 
-  defp migrate_line(line, queue_pid) do
+  defp migrate_line(line, queue_pid, file_name) do
     line
     |> String.split("\n")
     |> Enum.at(0)
     |> String.split("\t")
-    |> create_struct()
+    |> create_struct(file_name)
     |> insert_plant(queue_pid)
   end
 
-  defp create_struct([]), do: %{}
+  defp create_struct([], _), do: %{}
 
-  defp create_struct(plant) do
+  defp create_struct(plant, file_name) do
     Map.new()
     |> Map.put("last_name", Enum.at(plant, 0))
     |> Map.put("first_name", Enum.at(plant, 1))
@@ -167,6 +167,7 @@ defmodule Chirinola.MigratorFast do
     |> Map.put("reference", Enum.at(plant, 25))
     |> Map.put("comment", Enum.at(plant, 26))
     |> Map.put("no_name_column", Enum.at(plant, 27))
+    |> Map.put("file", file_name)
   end
 
   defp insert_plant(plant, _) when map_size(plant) == 0, do: Logger.info("- EMPTY LINE")
