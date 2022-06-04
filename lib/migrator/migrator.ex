@@ -3,7 +3,7 @@ defmodule Chirinola.Migrator do
   Documentation for `Migrator` module.
   """
   require Logger
-  alias Chirinola.PlantTrait
+  alias Chirinola.{QueueManager, Worker}
 
   @typedoc """
   Encoding modes, a tuple of two atoms.
@@ -41,44 +41,8 @@ defmodule Chirinola.Migrator do
   @wrong_path_message "Wrong path! Enter the absolute path of the file to migrate"
   @invalid_encoding_mode "The decoding format is invalid, check the valid formats"
 
+  @n_processes 1..200
   @file_not_found_message "File not found, enter the absolute path of the file to migrate"
-  @headers_line "LastName\tFirstName\tDatasetID\tDataset\tSpeciesName\tAccSpeciesID\tAccSpeciesName\tObservationID\tObsDataID\tTraitID\tTraitName\tDataID\tDataName\tOriglName\tOrigValueStr\tOrigUnitStr\tValueKindName\tOrigUncertaintyStr\tUncertaintyName\tReplicates\tStdValue\tUnitName\tRelUncertaintyPercent\tOrigObsDataID\tErrorRisk\tReference\tComment\t\n"
-
-  @doc """
-  Provide the absolute path of the file as a string,
-  the function `count/1` will return the number of lines that the file contains.
-
-
-  ## Examples
-
-      iex> Chirinola.Migrator.count("some_file.txt")
-      1000
-
-  If the path provided is incorrect an error will be displayed
-
-  ## Examples
-
-      iex> Chirinola.Migrator.count("bad_file.txt")
-      File not found, enter the absolute path of the file to migrate, code: enoent
-      :error
-
-  """
-
-  @spec count(String.t()) :: integer() | atom()
-  def count(path) do
-    path
-    |> File.read()
-    |> case do
-      {:ok, binary} ->
-        binary
-        |> String.split("\n")
-        |> Enum.count()
-
-      {:error, error} ->
-        Logger.error("#{@file_not_found_message}, code: #{error}")
-        :error
-    end
-  end
 
   @doc """
   Migrate data from a file to the `plant traits` table. The file is read line by line
@@ -109,6 +73,9 @@ defmodule Chirinola.Migrator do
 
   """
 
+  # path = "/Users/ftitor/Downloads/17728_27112021022449/17728.txt"
+  # path = "/Users/ftitor/Downloads/17728_27112021022449/test.txt"
+
   @spec start(String.t(), encoding_mode()) :: atom()
   def start(path, encoding_mode \\ @default_encoding)
   def start(nil, _encoding_mode), do: Logger.error(@wrong_path_message)
@@ -119,19 +86,17 @@ defmodule Chirinola.Migrator do
 
   def start(path, encoding_mode) do
     Logger.info("** MIGRATION PROCESS STARTED!")
-    # path = "/home/mono/Documentos/try/17728_27112021022449/17728.txt"
-    # path = "/Users/ftitor/Downloads/17728_27112021022449/17728.txt"
-    # path = "/Users/ftitor/Downloads/17728_27112021022449/test.txt"
 
     path
     |> File.exists?()
     |> case do
       true ->
         Logger.info("** PROCESSING FILE (#{path})...")
+        queue_pid = setup_processes()
 
         path
         |> File.stream!([encoding_mode], :line)
-        |> Stream.map(&migrate_line(&1, Path.basename(path)))
+        |> Stream.map(&process_line(&1, queue_pid, Path.basename(path)))
         |> Stream.run()
 
         Logger.info("** MIGRATION FINISHED!")
@@ -143,73 +108,21 @@ defmodule Chirinola.Migrator do
     end
   end
 
-  defp migrate_line(line, _) when line == @headers_line,
-    do: Logger.info("HEADERS REMOVED!")
-
-  defp migrate_line(line, file_name) do
-    line
-    |> String.split("\n")
-    |> Enum.at(0)
-    |> String.split("\t")
-    |> create_struct(file_name)
-    |> insert_plant()
+  defp process_line(line, queue_pid, file_name) do
+    {:ok, worker_pid} = QueueManager.get_pid(queue_pid)
+    Worker.insert(worker_pid, line, file_name)
   end
 
-  defp create_struct([], _), do: %{}
+  defp setup_processes() do
+    {:ok, queue_pid} = QueueManager.start_link()
 
-  defp create_struct(plant, file_name) do
-    Map.new()
-    |> Map.put("last_name", Enum.at(plant, 0))
-    |> Map.put("first_name", Enum.at(plant, 1))
-    |> Map.put("dataset_id", Enum.at(plant, 2))
-    |> Map.put("dataset", Enum.at(plant, 3))
-    |> Map.put("species_name", Enum.at(plant, 4))
-    |> Map.put("acc_species_id", Enum.at(plant, 5))
-    |> Map.put("acc_species_name", Enum.at(plant, 6))
-    |> Map.put("observation_id", Enum.at(plant, 7))
-    |> Map.put("obs_data_id", Enum.at(plant, 8))
-    |> Map.put("trait_id", Enum.at(plant, 9))
-    |> Map.put("trait_name", Enum.at(plant, 10))
-    |> Map.put("data_id", Enum.at(plant, 11))
-    |> Map.put("data_name", Enum.at(plant, 12))
-    |> Map.put("origl_name", Enum.at(plant, 13))
-    |> Map.put("orig_value_str", Enum.at(plant, 14))
-    |> Map.put("orig_unit_str", Enum.at(plant, 15))
-    |> Map.put("value_kind_name", Enum.at(plant, 16))
-    |> Map.put("orig_uncertainty_str", Enum.at(plant, 17))
-    |> Map.put("uncertainty_name", Enum.at(plant, 18))
-    |> Map.put("replicates", validate_replicate(Enum.at(plant, 19)))
-    |> Map.put("std_value", Enum.at(plant, 20))
-    |> Map.put("unit_name", Enum.at(plant, 21))
-    |> Map.put("rel_uncertainty_percent", Enum.at(plant, 22))
-    |> Map.put("orig_obs_data_id", Enum.at(plant, 23))
-    |> Map.put("error_risk", Enum.at(plant, 24))
-    |> Map.put("reference", Enum.at(plant, 25))
-    |> Map.put("comment", Enum.at(plant, 26))
-    |> Map.put("no_name_column", Enum.at(plant, 27))
-    |> Map.put("file", file_name)
+    @n_processes
+    |> Enum.to_list()
+    |> Enum.each(fn _ ->
+      {:ok, worker_pid} = Worker.start_link()
+      QueueManager.push(queue_pid, worker_pid)
+    end)
+
+    queue_pid
   end
-
-  defp insert_plant(plant) when map_size(plant) == 0, do: Logger.info("- Empty row")
-
-  defp insert_plant(plant), do: PlantTrait.insert(plant)
-
-  defp validate_replicate(nil), do: nil
-  defp validate_replicate(""), do: nil
-  defp validate_replicate(replicate) when is_float(replicate), do: replicate
-
-  defp validate_replicate(replicate) when is_binary(replicate) do
-    replicate
-    |> Float.parse()
-    |> case do
-      {float, _} ->
-        float
-
-      :error ->
-        Logger.error("Replicate invalid: #{replicate}")
-        nil
-    end
-  end
-
-  defp validate_replicate(_), do: nil
 end
