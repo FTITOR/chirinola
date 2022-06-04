@@ -21,7 +21,7 @@ iex(2)> mix ecto.migrate
 iex -S mix
 ```
 ```cmd
-iex(1)> Chirinola.MigratorFast.start("some/path/some_try_file.txt")
+iex(1)> Chirinola.Migrator.start("some/path/some_try_file.txt")
 ```
 
 ## Installation
