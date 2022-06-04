@@ -41,8 +41,11 @@ defmodule Chirinola.Schema.PlantTraits do
     timestamps()
   end
 
-  def changeset(plant_trait, params) do
-    plant_trait
-    |> cast(params, @fields)
-  end
+  @doc """
+    Creates a changeset based on the `plant_traits` and `params`.
+
+    If the parameters are invalid, a changeset will be returned with the errors.
+  """
+  @spec changeset(%__MODULE__{}, map()) :: no_return() | Ecto.Changeset.t()
+  def changeset(plant_trait, params), do: cast(plant_trait, params, @fields)
 end
